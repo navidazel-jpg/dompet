@@ -1,6 +1,6 @@
 {
-  "name": "Catatan Keuangan Digital",
-  "description": "Aplikasi pencatat pengeluaran dan pemasukan dengan visualisasi kategori dan sinkronisasi Google Sheets.",
+  "name": "Perhitungan Pengeluaran",
+  "description": "Aplikasi pencatatan dan perhitungan pengeluaran dengan visualisasi kurva bulanan dan analisis data.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
