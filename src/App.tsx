@@ -822,41 +822,62 @@ export default function App() {
         </div>
 
         {/* Sidebar Nav buttons */}
-        <nav className="flex-1 px-4 space-y-1.5 mt-6">
+        <nav className="flex-1 px-4 space-y-2 mt-6">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold transition-all text-left ${
+            className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-extrabold transition-all text-left cursor-pointer overflow-hidden ${
               activeTab === 'dashboard' 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/15' 
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                ? 'text-white' 
+                : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
             }`}
           >
-            <PieChart size={18} className={activeTab === 'dashboard' ? 'text-white' : 'text-slate-400'} />
-            Dasbor Utama
+            {activeTab === 'dashboard' && (
+              <motion.div
+                layoutId="active-sidebar-pill"
+                className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 rounded-2xl shadow-md shadow-indigo-600/30 border border-indigo-400/20"
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              />
+            )}
+            <PieChart size={18} className={`relative z-10 ${activeTab === 'dashboard' ? 'text-white' : 'text-slate-400'}`} />
+            <span className="relative z-10">Dashboard</span>
           </button>
           
           <button
             onClick={() => setActiveTab('record')}
-            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold transition-all text-left ${
+            className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-extrabold transition-all text-left cursor-pointer overflow-hidden ${
               activeTab === 'record' 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/15' 
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                ? 'text-white' 
+                : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
             }`}
           >
-            <Grid size={18} className={activeTab === 'record' ? 'text-white' : 'text-slate-400'} />
-            Pencatatan Baru
+            {activeTab === 'record' && (
+              <motion.div
+                layoutId="active-sidebar-pill"
+                className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 rounded-2xl shadow-md shadow-indigo-600/30 border border-indigo-400/20"
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              />
+            )}
+            <PlusCircle size={18} className={`relative z-10 ${activeTab === 'record' ? 'text-white' : 'text-slate-400'}`} />
+            <span className="relative z-10">Catat</span>
           </button>
           
           <button
             onClick={() => setActiveTab('history')}
-            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold transition-all text-left ${
+            className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-extrabold transition-all text-left cursor-pointer overflow-hidden ${
               activeTab === 'history' 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/15' 
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                ? 'text-white' 
+                : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
             }`}
           >
-            <FileText size={18} className={activeTab === 'history' ? 'text-white' : 'text-slate-400'} />
-            Riwayat Transaksi
+            {activeTab === 'history' && (
+              <motion.div
+                layoutId="active-sidebar-pill"
+                className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 rounded-2xl shadow-md shadow-indigo-600/30 border border-indigo-400/20"
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              />
+            )}
+            <Eye size={18} className={`relative z-10 ${activeTab === 'history' ? 'text-white' : 'text-slate-400'}`} />
+            <span className="relative z-10">Preview</span>
           </button>
         </nav>
 
@@ -1602,22 +1623,42 @@ export default function App() {
       </main>
     </div>
 
-      {/* FLOAT BOTTOM MOBILE DYNAMIC TAB BAR BAR */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-2.5 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] md:hidden z-40">
-        <div className="flex justify-around items-center max-w-lg mx-auto">
+      {/* LIQUID BOTTOM BAR (FLOATING DOCK FOR MOBILE & TABLET) */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-md md:hidden">
+        <div className="bg-slate-900/90 backdrop-blur-2xl border border-slate-700/70 shadow-[0_16px_40px_rgba(15,23,42,0.5)] rounded-3xl p-1.5 flex justify-between items-center relative overflow-hidden">
           
-          {/* TAB 1: DASBOR */}
+          {/* LIQUID AMBIENT BACKGROUND GLOW */}
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/15 via-purple-500/15 to-rose-500/15 pointer-events-none rounded-3xl blur-md" />
+
+          {/* TAB 1: DASHBOARD */}
           <button 
             onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center justify-center p-1.5 transition-all w-20 relative cursor-pointer ${activeTab === 'dashboard' ? 'text-indigo-600 font-extrabold scale-105' : 'text-slate-400'}`}
+            className={`relative flex-1 flex flex-col items-center justify-center py-2 px-3 rounded-2xl transition-all duration-300 cursor-pointer select-none ${
+              activeTab === 'dashboard' ? 'text-white font-black' : 'text-slate-400 hover:text-slate-200'
+            }`}
           >
-            <PieChart size={20} className={activeTab === 'dashboard' ? 'stroke-[2.5px]' : 'stroke-2'} />
-            <span className="text-[10px] mt-1 font-bold">Dasbor</span>
             {activeTab === 'dashboard' && (
               <motion.div 
-                layoutId="active-dot" 
-                className="absolute -top-1 w-1.5 h-1.5 bg-indigo-600 rounded-full" 
-                transition={{ type: 'spring', sharpness: 120, damping: 15 }}
+                layoutId="liquid-bar-pill" 
+                className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 rounded-2xl shadow-md shadow-indigo-500/40 border border-indigo-400/30" 
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              />
+            )}
+            <motion.div 
+              animate={{ scale: activeTab === 'dashboard' ? 1.15 : 1, y: activeTab === 'dashboard' ? -1 : 0 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+              className="relative z-10 flex items-center justify-center"
+            >
+              <PieChart size={20} className={activeTab === 'dashboard' ? 'stroke-[2.5px] drop-shadow-xs' : 'stroke-2'} />
+            </motion.div>
+            <span className="relative z-10 text-[11px] mt-0.5 font-extrabold tracking-tight">
+              Dashboard
+            </span>
+            {activeTab === 'dashboard' && (
+              <motion.div 
+                layoutId="liquid-bar-droplet" 
+                className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-1 bg-indigo-200 rounded-full blur-[0.5px] shadow-xs shadow-indigo-200" 
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
               />
             )}
           </button>
@@ -1625,31 +1666,65 @@ export default function App() {
           {/* TAB 2: CATAT */}
           <button 
             onClick={() => setActiveTab('record')}
-            className={`flex flex-col items-center justify-center p-1.5 transition-all w-20 relative cursor-pointer ${activeTab === 'record' ? 'text-indigo-600 font-extrabold scale-105' : 'text-slate-400'}`}
+            className={`relative flex-1 flex flex-col items-center justify-center py-2 px-3 rounded-2xl transition-all duration-300 cursor-pointer select-none ${
+              activeTab === 'record' ? 'text-white font-black' : 'text-slate-400 hover:text-slate-200'
+            }`}
           >
-            <Grid size={20} className={activeTab === 'record' ? 'stroke-[2.5px]' : 'stroke-2'} />
-            <span className="text-[10px] mt-1 font-bold">Catat</span>
             {activeTab === 'record' && (
               <motion.div 
-                layoutId="active-dot" 
-                className="absolute -top-1 w-1.5 h-1.5 bg-indigo-600 rounded-full" 
-                transition={{ type: 'spring', sharpness: 120, damping: 15 }}
+                layoutId="liquid-bar-pill" 
+                className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 rounded-2xl shadow-md shadow-indigo-500/40 border border-indigo-400/30" 
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              />
+            )}
+            <motion.div 
+              animate={{ scale: activeTab === 'record' ? 1.15 : 1, y: activeTab === 'record' ? -1 : 0 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+              className="relative z-10 flex items-center justify-center"
+            >
+              <PlusCircle size={20} className={activeTab === 'record' ? 'stroke-[2.5px] drop-shadow-xs' : 'stroke-2'} />
+            </motion.div>
+            <span className="relative z-10 text-[11px] mt-0.5 font-extrabold tracking-tight">
+              Catat
+            </span>
+            {activeTab === 'record' && (
+              <motion.div 
+                layoutId="liquid-bar-droplet" 
+                className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-1 bg-indigo-200 rounded-full blur-[0.5px] shadow-xs shadow-indigo-200" 
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
               />
             )}
           </button>
 
-          {/* TAB 3: RIWAYAT */}
+          {/* TAB 3: PREVIEW */}
           <button 
             onClick={() => setActiveTab('history')}
-            className={`flex flex-col items-center justify-center p-1.5 transition-all w-20 relative cursor-pointer ${activeTab === 'history' ? 'text-indigo-600 font-extrabold scale-105' : 'text-slate-400'}`}
+            className={`relative flex-1 flex flex-col items-center justify-center py-2 px-3 rounded-2xl transition-all duration-300 cursor-pointer select-none ${
+              activeTab === 'history' ? 'text-white font-black' : 'text-slate-400 hover:text-slate-200'
+            }`}
           >
-            <FileText size={20} className={activeTab === 'history' ? 'stroke-[2.5px]' : 'stroke-2'} />
-            <span className="text-[10px] mt-1 font-bold">Riwayat</span>
             {activeTab === 'history' && (
               <motion.div 
-                layoutId="active-dot" 
-                className="absolute -top-1 w-1.5 h-1.5 bg-indigo-600 rounded-full" 
-                transition={{ type: 'spring', sharpness: 120, damping: 15 }}
+                layoutId="liquid-bar-pill" 
+                className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 rounded-2xl shadow-md shadow-indigo-500/40 border border-indigo-400/30" 
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              />
+            )}
+            <motion.div 
+              animate={{ scale: activeTab === 'history' ? 1.15 : 1, y: activeTab === 'history' ? -1 : 0 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+              className="relative z-10 flex items-center justify-center"
+            >
+              <Eye size={20} className={activeTab === 'history' ? 'stroke-[2.5px] drop-shadow-xs' : 'stroke-2'} />
+            </motion.div>
+            <span className="relative z-10 text-[11px] mt-0.5 font-extrabold tracking-tight">
+              Preview
+            </span>
+            {activeTab === 'history' && (
+              <motion.div 
+                layoutId="liquid-bar-droplet" 
+                className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-1 bg-indigo-200 rounded-full blur-[0.5px] shadow-xs shadow-indigo-200" 
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
               />
             )}
           </button>
