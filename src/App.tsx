@@ -10,7 +10,7 @@ import {
   RefreshCw, AlertCircle, Building2, ArrowDownToLine, Landmark,
   LogOut, User, Mail, ChevronDown, ChevronUp, CreditCard,
   Eye, EyeOff, ChevronLeft, ChevronRight, PieChart, Wrench, Bell,
-  Grid, Calculator, List, Search, SlidersHorizontal, Settings, Info, BarChart2
+  Grid, Calculator, List, Search, SlidersHorizontal, Settings, Info, BarChart2, Lightbulb
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -21,7 +21,13 @@ import {
   YAxis, 
   Tooltip, 
   CartesianGrid,
-  Cell
+  Cell,
+  PieChart as RechartsPieChart,
+  Pie,
+  LineChart,
+  Line,
+  AreaChart,
+  Area
 } from 'recharts';
 
 import { Transaction, DialogState } from './types';
@@ -65,6 +71,8 @@ export default function App() {
   const currentYear = new Date().getFullYear().toString();
   const [expenseFilterMonth, setExpenseFilterMonth] = useState<string>(currentMonth);
   const [expenseFilterYear, setExpenseFilterYear] = useState<string>(currentYear);
+  const [showTips, setShowTips] = useState<boolean>(false);
+  const [chartType, setChartType] = useState<string>('bar');
 
   const [dialog, setDialog] = useState<DialogState>({ isOpen: false, type: 'info', message: '', onConfirm: null });
 
@@ -984,22 +992,60 @@ export default function App() {
               className="space-y-6"
             >
               {/* TOTAL EXPENSES STATS CARD */}
-              <div className="bg-gradient-to-br from-rose-600 via-rose-700 to-red-800 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-rose-500/20 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-500">
-                  <TrendingDown size={140} />
+              <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-700/50 relative group z-10">
+                <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+                  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                    <TrendingDown size={140} />
+                  </div>
                 </div>
                 
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
-                    <div className="flex items-center gap-2 mb-2 text-rose-200">
+                    <div className="flex items-center gap-2 mb-2 text-slate-300">
                       <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md">
                         <TrendingDown size={20} />
                       </div>
-                      <p className="text-xs font-black uppercase tracking-widest text-rose-200">Total Pengeluaran Bulan Ini</p>
+                      <p className="text-xs font-black uppercase tracking-widest text-slate-300">Total Pengeluaran Bulan Ini</p>
                     </div>
-                    <h3 className="text-4xl md:text-5xl font-black tracking-tight text-white mt-1">
+                    <h3 className="text-2xl md:text-3xl font-black tracking-tight text-white mt-1">
                       {formatRupiah(displayedExpense)}
                     </h3>
+
+                    {/* TIPS ICON & COMBOBOX */}
+                    <div className="relative mt-3">
+                      <button
+                        onClick={() => setShowTips(!showTips)}
+                        className="flex items-center gap-1.5 text-[11px] text-indigo-300 hover:text-indigo-200 bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1.5 rounded-full transition-all cursor-pointer font-bold border border-indigo-500/20"
+                      >
+                        <Lightbulb size={12} className={showTips ? "text-amber-400" : ""} />
+                        <span>Tips Keuangan</span>
+                        <ChevronDown size={12} className={`transition-transform duration-300 ${showTips ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {showTips && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute left-0 top-full mt-2 w-72 md:w-80 bg-white text-slate-800 rounded-2xl shadow-xl border border-slate-200 p-4 z-50 origin-top-left"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 bg-amber-100 text-amber-600 rounded-xl shrink-0">
+                                <Lightbulb size={18} />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 mb-1">Tips Menghemat</h4>
+                                <p className="text-[11px] leading-relaxed text-slate-600 font-medium">
+                                  Pantau terus pengeluaran harian Anda. Pastikan sisa anggaran bulan ini cukup untuk menutupi kebutuhan wajib seperti servis motor dan tagihan bulanan. Jangan lupa sisihkan setidaknya 20% untuk tabungan!
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
 
                   <div className="flex gap-2.5 w-full md:w-auto bg-white/10 p-2 rounded-2xl backdrop-blur-md border border-white/10">
@@ -1041,58 +1087,138 @@ export default function App() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                   <div>
                     <h3 className="text-base font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                      <BarChart2 size={20} className="text-rose-500" /> Diagram Batang Pengeluaran Per Bulan
+                      <BarChart2 size={20} className="text-rose-500" /> Grafik Pengeluaran
                     </h3>
                     <p className="text-xs text-slate-400 font-medium mt-0.5">
-                      Visualisasi grafik pengeluaran bulanan {expenseFilterYear === 'all' ? 'semua tahun' : `tahun ${expenseFilterYear}`}
+                      Visualisasi pengeluaran {expenseFilterYear === 'all' ? 'semua tahun' : `tahun ${expenseFilterYear}`}
                     </p>
                   </div>
 
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-rose-50 text-rose-700 font-black text-xs rounded-2xl border border-rose-200/70 self-start sm:self-auto">
-                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                    Grafik Batang Bulanan
+                  <div className="inline-flex items-center gap-2 self-start sm:self-auto">
+                    <select 
+                      value={chartType} 
+                      onChange={(e) => setChartType(e.target.value)}
+                      className="bg-slate-50 text-slate-700 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+                    >
+                      <option value="bar">Diagram Batang</option>
+                      <option value="pie">Diagram Lingkaran</option>
+                      <option value="line">Diagram Garis</option>
+                      <option value="area">Diagram Area</option>
+                    </select>
                   </div>
                 </div>
 
-                {/* RECHARTS CANVAS */}
+                {/* RECHARTS CANVAS OR FALLBACK */}
                 <div className="h-64 sm:h-72 w-full pt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyExpenseData} margin={{ top: 15, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis 
-                        dataKey="month" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }}
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tickFormatter={formatYAxis}
-                        tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
-                      />
-                      <Tooltip 
-                        cursor={{ fill: 'rgba(244, 63, 94, 0.05)', radius: 12 }} 
-                        content={<CustomChartTooltip />} 
-                      />
-                      <Bar dataKey="amount" radius={[10, 10, 0, 0]} maxBarSize={44}>
-                        {monthlyExpenseData.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={
-                              entry.isCurrentMonth && entry.amount > 0 
-                                ? '#e11d48' 
-                                : entry.isMaxMonth 
-                                ? '#f43f5e' 
-                                : entry.amount > 0 
-                                ? '#fb7185' 
-                                : '#e2e8f0'
-                            } 
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {chartType === 'bar' ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={monthlyExpenseData} margin={{ top: 15, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis 
+                          dataKey="month" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tickFormatter={formatYAxis}
+                          tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
+                        />
+                        <Tooltip 
+                          cursor={{ fill: 'rgba(244, 63, 94, 0.05)', radius: 12 }} 
+                          content={<CustomChartTooltip />} 
+                        />
+                        <Bar dataKey="amount" radius={[10, 10, 0, 0]} maxBarSize={44}>
+                          {monthlyExpenseData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={
+                                entry.isCurrentMonth && entry.amount > 0 
+                                  ? '#e11d48' 
+                                  : entry.isMaxMonth 
+                                  ? '#f43f5e' 
+                                  : entry.amount > 0 
+                                  ? '#fb7185' 
+                                  : '#e2e8f0'
+                              } 
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : chartType === 'pie' ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                        <Tooltip content={<CustomChartTooltip />} />
+                        <Pie
+                          data={monthlyExpenseData.filter(d => d.amount > 0)}
+                          dataKey="amount"
+                          nameKey="month"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          paddingAngle={5}
+                          stroke="none"
+                        >
+                          {monthlyExpenseData.filter(d => d.amount > 0).map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.isCurrentMonth ? '#e11d48' : entry.isMaxMonth ? '#f43f5e' : `hsl(340, ${70 - (index * 5)}%, ${65 + (index * 2)}%)`}
+                            />
+                          ))}
+                        </Pie>
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
+                  ) : chartType === 'line' ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={monthlyExpenseData} margin={{ top: 15, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis 
+                          dataKey="month" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tickFormatter={formatYAxis}
+                          tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
+                        />
+                        <Tooltip content={<CustomChartTooltip />} />
+                        <Line type="monotone" dataKey="amount" stroke="#e11d48" strokeWidth={3} dot={{ r: 4, fill: '#e11d48', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, fill: '#be123c', stroke: '#fff', strokeWidth: 2 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={monthlyExpenseData} margin={{ top: 15, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#e11d48" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#e11d48" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis 
+                          dataKey="month" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tickFormatter={formatYAxis}
+                          tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
+                        />
+                        <Tooltip content={<CustomChartTooltip />} />
+                        <Area type="monotone" dataKey="amount" stroke="#e11d48" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" activeDot={{ r: 6, fill: '#be123c', stroke: '#fff', strokeWidth: 2 }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
 
                 {/* BOTTOM METRICS HIGHLIGHT */}
