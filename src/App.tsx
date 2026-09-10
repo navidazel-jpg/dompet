@@ -980,9 +980,17 @@ export default function App() {
 
         {/* CONTAINER CONTENT */}
         <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 md:py-8 mb-24 md:mb-12">
-          <AnimatePresence mode="wait">
-          
-          {/* TAB 1: DASHBOARD VIEW */}
+          {/* INITIAL LOADING STATE SKELETON */}
+          {isSyncing && transactions.length === 0 ? (
+            <div className="space-y-6 w-full animate-pulse">
+              <div className="h-32 md:h-40 bg-slate-200 rounded-3xl w-full"></div>
+              <div className="h-80 md:h-96 bg-slate-200 rounded-3xl w-full mt-6"></div>
+              <div className="h-40 bg-slate-200 rounded-3xl w-full mt-6"></div>
+            </div>
+          ) : (
+            <AnimatePresence mode="wait">
+            
+            {/* TAB 1: DASHBOARD VIEW */}
           {activeTab === 'dashboard' && (
             <motion.div 
               key="dashboard"
@@ -1745,8 +1753,9 @@ export default function App() {
 
             </motion.div>
           )}
-
-        </AnimatePresence>
+          
+            </AnimatePresence>
+          )}
       </main>
     </div>
 
