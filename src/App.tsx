@@ -39,6 +39,7 @@ export default function App() {
   const [emailInput, setEmailInput] = useState<string>('');
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'record' | 'history'>('dashboard');
 
