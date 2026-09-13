@@ -73,7 +73,22 @@ export default function App() {
   const [expenseFilterMonth, setExpenseFilterMonth] = useState<string>(currentMonth);
   const [expenseFilterYear, setExpenseFilterYear] = useState<string>(currentYear);
   const [showTips, setShowTips] = useState<boolean>(false);
+  const [showCategorySettings, setShowCategorySettings] = useState<boolean>(false);
+  const [selectedTotalCategories, setSelectedTotalCategories] = useState<string[]>(() => {
+    const saved = localStorage.getItem('selected_expense_categories_for_total');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    return EXPENSE_CATEGORIES.map(c => c.id);
+  });
   const [chartType, setChartType] = useState<string>('bar');
+
+  useEffect(() => {
+    localStorage.setItem('selected_expense_categories_for_total', JSON.stringify(selectedTotalCategories));
+  }, [selectedTotalCategories]);
 
   const [dialog, setDialog] = useState<DialogState>({ isOpen: false, type: 'info', message: '', onConfirm: null });
 
@@ -433,9 +448,10 @@ export default function App() {
   };
 
   // --- MENGHITUNG TOTAL DAN RINCIAN PER KATEGORI ---
-  const { displayedExpense, availableYears, categoryTotals, categoryBreakdownData } = useMemo(() => {
+  const { displayedExpense, availableYears, categoryTotals, categoryBreakdownData, rawCatTotals } = useMemo(() => {
     const years = new Set<string>([new Date().getFullYear().toString()]); 
-    let filteredSum = 0;
+    let allCategoriesSum = 0;
+    let selectedCategoriesSum = 0;
     
     const catTotals: Record<string, number> = {};
     const catTransactions: Record<string, Transaction[]> = {};
@@ -470,10 +486,14 @@ export default function App() {
         }
         
         if (matchesMonth && matchesYear) {
-           filteredSum += Number(tx.amount);
+           const amountNum = Number(tx.amount);
+           allCategoriesSum += amountNum;
            const cat = tx.kategori && catTotals[tx.kategori] !== undefined ? tx.kategori : 'lainnya';
-           catTotals[cat] += Number(tx.amount);
-           catTransactions[cat].push(tx); 
+           catTotals[cat] += amountNum;
+           catTransactions[cat].push(tx);
+           if (selectedTotalCategories.includes(cat)) {
+              selectedCategoriesSum += amountNum;
+           }
         }
       }
     });
@@ -481,16 +501,17 @@ export default function App() {
     const catArray = EXPENSE_CATEGORIES.map(c => ({
       ...c,
       amount: catTotals[c.id] || 0,
-      percentage: filteredSum > 0 ? Number((((catTotals[c.id] || 0) / filteredSum) * 100).toFixed(1)) : 0
+      percentage: allCategoriesSum > 0 ? Number((((catTotals[c.id] || 0) / allCategoriesSum) * 100).toFixed(1)) : 0
     })).sort((a, b) => b.amount - a.amount);
 
     return {
-      displayedExpense: filteredSum,
+      displayedExpense: selectedCategoriesSum,
       availableYears: Array.from(years).sort((a, b) => Number(b) - Number(a)),
       categoryTotals: catArray,
-      categoryBreakdownData: catTransactions
+      categoryBreakdownData: catTransactions,
+      rawCatTotals: catTotals
     };
-  }, [processedHistory, expenseFilterMonth, expenseFilterYear]);
+  }, [processedHistory, expenseFilterMonth, expenseFilterYear, selectedTotalCategories]);
 
   // --- MENGHITUNG CHART DIAGRAM BATANG PENGELUARAN BULANAN ---
   const { monthlyExpenseData, chartStats } = useMemo(() => {
@@ -1020,40 +1041,188 @@ export default function App() {
                       {formatRupiah(displayedExpense)}
                     </h3>
 
-                    {/* TIPS ICON & COMBOBOX */}
-                    <div className="relative mt-3">
-                      <button
-                        onClick={() => setShowTips(!showTips)}
-                        className="flex items-center gap-1.5 text-[11px] text-indigo-300 hover:text-indigo-200 bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1.5 rounded-full transition-all cursor-pointer font-bold border border-indigo-500/20"
-                      >
-                        <Lightbulb size={12} className={showTips ? "text-amber-400" : ""} />
-                        <span>Tips Keuangan</span>
-                        <ChevronDown size={12} className={`transition-transform duration-300 ${showTips ? 'rotate-180' : ''}`} />
-                      </button>
+                    {/* FILTER STATUS BADGE */}
+                    {selectedTotalCategories.length < EXPENSE_CATEGORIES.length && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-amber-300 font-bold bg-amber-500/20 border border-amber-500/30 px-2.5 py-1 rounded-xl w-fit">
+                        <span>Filter aktif: {selectedTotalCategories.length} dari {EXPENSE_CATEGORIES.length} kategori</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTotalCategories(EXPENSE_CATEGORIES.map(c => c.id))}
+                          className="text-white hover:underline text-[10px] ml-1 bg-white/20 px-1.5 py-0.5 rounded-md cursor-pointer font-bold"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    )}
 
-                      <AnimatePresence>
-                        {showTips && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                            transition={{ duration: 0.2 }}
-                            className="absolute left-0 top-full mt-2 w-72 md:w-80 bg-white text-slate-800 rounded-2xl shadow-xl border border-slate-200 p-4 z-50 origin-top-left"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="p-2 bg-amber-100 text-amber-600 rounded-xl shrink-0">
-                                <Lightbulb size={18} />
-                              </div>
-                              <div>
-                                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 mb-1">Tips Menghemat</h4>
-                                <p className="text-[11px] leading-relaxed text-slate-600 font-medium">
-                                  Pantau terus pengeluaran harian Anda. Pastikan sisa anggaran bulan ini cukup untuk menutupi kebutuhan wajib seperti servis motor dan tagihan bulanan. Jangan lupa sisihkan setidaknya 20% untuk tabungan!
-                                </p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                    {/* ACTION BUTTONS: TIPS & FILTER KATEGORI */}
+                    <div className="relative mt-3 flex flex-wrap items-center gap-2">
+                      {/* BUTTON 1: TIPS KEUANGAN */}
+                      <div className="relative">
+                        <button
+                          onClick={() => {
+                            setShowTips(!showTips);
+                            if (showCategorySettings) setShowCategorySettings(false);
+                          }}
+                          className="flex items-center gap-1.5 text-[11px] text-indigo-300 hover:text-indigo-200 bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1.5 rounded-full transition-all cursor-pointer font-bold border border-indigo-500/20"
+                        >
+                          <Lightbulb size={12} className={showTips ? "text-amber-400" : ""} />
+                          <span>Tips Keuangan</span>
+                          <ChevronDown size={12} className={`transition-transform duration-300 ${showTips ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        <AnimatePresence>
+                          {showTips && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setShowTips(false)} />
+                              <motion.div
+                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute left-0 top-full mt-2 w-72 md:w-80 bg-white text-slate-800 rounded-2xl shadow-xl border border-slate-200 p-4 z-50 origin-top-left"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="p-2 bg-amber-100 text-amber-600 rounded-xl shrink-0">
+                                    <Lightbulb size={18} />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 mb-1">Tips Menghemat</h4>
+                                    <p className="text-[11px] leading-relaxed text-slate-600 font-medium">
+                                      Pantau terus pengeluaran harian Anda. Pastikan sisa anggaran bulan ini cukup untuk menutupi kebutuhan wajib seperti servis motor dan tagihan bulanan. Jangan lupa sisihkan setidaknya 20% untuk tabungan!
+                                    </p>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* BUTTON 2: ATUR KATEGORI TOTAL (ICON KECIL DENGAN COMBOBOX) */}
+                      <div className="relative">
+                        <button
+                          onClick={() => {
+                            setShowCategorySettings(!showCategorySettings);
+                            if (showTips) setShowTips(false);
+                          }}
+                          className={`flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-full transition-all cursor-pointer font-bold border ${
+                            selectedTotalCategories.length < EXPENSE_CATEGORIES.length
+                              ? 'text-amber-300 bg-amber-500/20 hover:bg-amber-500/30 border-amber-500/40'
+                              : 'text-teal-300 hover:text-teal-200 bg-teal-500/10 hover:bg-teal-500/20 border-teal-500/20'
+                          }`}
+                          title="Pilih kategori yang akan dihitung dan ditampilkan di total pengeluaran"
+                        >
+                          <SlidersHorizontal size={12} className={showCategorySettings ? "text-teal-400" : ""} />
+                          <span>Kategori ({selectedTotalCategories.length}/{EXPENSE_CATEGORIES.length})</span>
+                          <ChevronDown size={12} className={`transition-transform duration-300 ${showCategorySettings ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        <AnimatePresence>
+                          {showCategorySettings && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setShowCategorySettings(false)} />
+                              <motion.div
+                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute left-0 top-full mt-2 w-[calc(100vw-3rem)] max-w-sm sm:w-96 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 origin-top-left"
+                              >
+                                {/* HEADER */}
+                                <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-teal-100 text-teal-700 rounded-xl">
+                                      <SlidersHorizontal size={15} />
+                                    </div>
+                                    <div>
+                                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">Pilih Kategori</h4>
+                                      <p className="text-[10px] text-slate-500 font-medium">Hanya kategori terpilih yang dihitung ke total</p>
+                                    </div>
+                                  </div>
+                                  <button 
+                                    type="button" 
+                                    onClick={() => setShowCategorySettings(false)}
+                                    className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                                  >
+                                    <X size={15} />
+                                  </button>
+                                </div>
+
+                                {/* QUICK ACTIONS */}
+                                <div className="flex items-center justify-between gap-2 mb-2.5 px-0.5">
+                                  <span className="text-[11px] font-bold text-slate-500">
+                                    {selectedTotalCategories.length} dari {EXPENSE_CATEGORIES.length} dipilih
+                                  </span>
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedTotalCategories(EXPENSE_CATEGORIES.map(c => c.id))}
+                                      className="text-[10px] font-extrabold text-teal-700 hover:text-teal-800 bg-teal-50 hover:bg-teal-100 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                                    >
+                                      Pilih Semua
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedTotalCategories([])}
+                                      className="text-[10px] font-extrabold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                                    >
+                                      Hapus Semua
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* CATEGORIES LIST */}
+                                <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
+                                  {EXPENSE_CATEGORIES.map(cat => {
+                                    const isSelected = selectedTotalCategories.includes(cat.id);
+                                    const catAmount = rawCatTotals[cat.id] || 0;
+                                    return (
+                                      <button
+                                        key={cat.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedTotalCategories(prev =>
+                                            prev.includes(cat.id)
+                                              ? prev.filter(id => id !== cat.id)
+                                              : [...prev, cat.id]
+                                          );
+                                        }}
+                                        className={`w-full flex items-center justify-between p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                                          isSelected
+                                            ? 'bg-teal-50/70 border-teal-200 text-slate-800 shadow-2xs'
+                                            : 'bg-slate-50/50 border-slate-200/70 text-slate-400 hover:bg-slate-100/60'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                          <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+                                            isSelected ? 'bg-teal-600 border-teal-600 text-white' : 'border-slate-300 bg-white'
+                                          }`}>
+                                            {isSelected && <Check size={13} strokeWidth={3} />}
+                                          </div>
+                                          <span className="text-base">{cat.icon}</span>
+                                          <span className={`text-xs font-bold truncate ${isSelected ? 'text-slate-800' : 'text-slate-500'}`}>
+                                            {cat.label}
+                                          </span>
+                                        </div>
+                                        <span className={`text-xs font-black shrink-0 ${isSelected ? 'text-teal-700' : 'text-slate-400'}`}>
+                                          {formatRupiah(catAmount)}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* FOOTER */}
+                                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+                                  <span className="text-[11px] font-bold text-slate-500">Total Terhitung:</span>
+                                  <span className="text-sm font-black text-slate-900">{formatRupiah(displayedExpense)}</span>
+                                </div>
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </div>
 
